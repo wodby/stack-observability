@@ -1,6 +1,7 @@
 name: observability
 title: Observability
 icon: grafana
+docs: https://wodby.com/docs/2.0/stacks/catalog/observability/
 
 services:
 - name: tempo
