@@ -1,0 +1,112 @@
+name: observability
+title: Observability
+icon: grafana
+
+services:
+- name: tempo
+  title: Grafana Tempo
+  service: tempo
+  required: true
+  volumes:
+  - name: data
+    size: 20
+  workloads:
+  - name: main
+    containers:
+    - name: tempo
+      resources:
+        request:
+          cpu: 200
+          memory: 512
+        limit:
+          cpu: 1000
+          memory: 2048
+- name: loki
+  title: Grafana Loki
+  service: loki
+  required: true
+  volumes:
+  - name: data
+    size: 20
+  workloads:
+  - name: main
+    containers:
+    - name: loki
+      resources:
+        request:
+          cpu: 200
+          memory: 512
+        limit:
+          cpu: 1000
+          memory: 2048
+- name: victoria-metrics
+  title: VictoriaMetrics
+  service: victoria-metrics
+  required: true
+  volumes:
+  - name: data
+    size: 20
+  workloads:
+  - name: main
+    containers:
+    - name: victoria-metrics
+      resources:
+        request:
+          cpu: 200
+          memory: 512
+        limit:
+          cpu: 1000
+          memory: 2048
+- name: otel-collector
+  title: OpenTelemetry Collector
+  service: opentelemetry-collector
+  required: true
+  links:
+  - name: tempo
+    service: tempo
+  - name: loki
+    service: loki
+  - name: victoria-metrics
+    service: victoria-metrics
+  configs:
+  - name: config
+    config: configs/otel-collector.yaml
+  workloads:
+  - name: main
+    containers:
+    - name: otelcol
+      resources:
+        request:
+          cpu: 100
+          memory: 256
+        limit:
+          cpu: 1000
+          memory: 1024
+- name: grafana
+  title: Grafana
+  service: grafana
+  main: true
+  links:
+  - name: tempo
+    service: tempo
+  - name: loki
+    service: loki
+  - name: victoria-metrics
+    service: victoria-metrics
+  configs:
+  - name: datasources
+    config: configs/grafana-datasources.yml.tmpl
+  volumes:
+  - name: data
+    size: 10
+  workloads:
+  - name: main
+    containers:
+    - name: grafana
+      resources:
+        request:
+          cpu: 200
+          memory: 512
+        limit:
+          cpu: 1000
+          memory: 1024
