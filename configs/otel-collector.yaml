@@ -1,0 +1,57 @@
+# OpenTelemetry Collector (contrib distribution) for the observability stack: one public OTLP endpoint for traces,
+# metrics and logs, stored in the linked Tempo, VictoriaMetrics and Loki services.
+# Reference: https://opentelemetry.io/docs/collector/configuration/
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  # Every OTLP request must send "Authorization: Bearer <ingest token>".
+  bearertokenauth:
+    token: ${env:OTLP_INGEST_TOKEN}
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        auth:
+          authenticator: bearertokenauth
+      http:
+        endpoint: 0.0.0.0:4318
+        auth:
+          authenticator: bearertokenauth
+
+processors:
+  # Refuse data before the container runs out of memory.
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 80
+    spike_limit_percentage: 20
+  batch: {}
+
+exporters:
+  otlp_grpc/tempo:
+    endpoint: {{links.tempo.host}}:4317
+    tls:
+      insecure: true
+  # Loki's native OTLP endpoint; the exporter appends /v1/logs.
+  otlp_http/loki:
+    endpoint: http://{{links.loki.host}}:{{links.loki.port}}/otlp
+  # VictoriaMetrics' native OpenTelemetry endpoint.
+  otlp_http/victoria-metrics:
+    metrics_endpoint: http://{{links.victoria-metrics.host}}:{{links.victoria-metrics.port}}/opentelemetry/v1/metrics
+
+service:
+  extensions: [health_check, bearertokenauth]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlp_grpc/tempo]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlp_http/victoria-metrics]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlp_http/loki]
