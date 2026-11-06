@@ -63,15 +63,12 @@ services:
   service: opentelemetry-collector
   required: true
   links:
-  - name: tempo
+  - name: traces
     service: tempo
-  - name: loki
+  - name: logs
     service: loki
-  - name: victoria-metrics
+  - name: metrics
     service: victoria-metrics
-  configs:
-  - name: config
-    config: configs/otel-collector.yaml
   workloads:
   - name: main
     containers:

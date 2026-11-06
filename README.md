@@ -33,7 +33,7 @@ composition for the observability stack.
 | Grafana Tempo<br>`tempo` | required; enabled by default; volumes: `data` 20 GB |
 | Grafana Loki<br>`loki` | required; enabled by default; volumes: `data` 20 GB |
 | VictoriaMetrics<br>`victoria-metrics` | required; enabled by default; volumes: `data` 20 GB |
-| OpenTelemetry Collector<br>`otel-collector` | required; enabled by default; links: `tempo` → `tempo`, `loki` → `loki`, `victoria-metrics` → `victoria-metrics` |
+| OpenTelemetry Collector<br>`otel-collector` | required; enabled by default; links: `traces` → `tempo`, `logs` → `loki`, `metrics` → `victoria-metrics` |
 | Grafana<br>`grafana` | optional; enabled by default; volumes: `data` 10 GB; links: `tempo` → `tempo`, `loki` → `loki`, `victoria-metrics` → `victoria-metrics` |
 
 Enabled optional services are selected by default but can be excluded when an
